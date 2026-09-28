@@ -6,7 +6,7 @@
 
 
 #ifndef STACK_H
-#define STACK_H // вынести в main
+#define STACK_H
 
     //ON_DBG(__FILE__, __LINE__);
 struct Stack_t {
@@ -21,8 +21,10 @@ struct Stack_t {
 
 enum Stack_Errors {
     NO_ERR = 0,
+    CAPACITY_CTOR_ERR,
     CALLOC_ERR,
-    REALLOC_ERR,
+    REALLOC_UP_ERR,
+    REALLOC_DOWN_ERR,
     PUSH_ERR,
     STRUCT_NAME_ERR,
     FILE_NAME_ERR,
@@ -32,14 +34,16 @@ enum Stack_Errors {
 
 #define ASSERT_OK(stk) \
     assert((stk));\
-    assert((stk)->error);\
+    assert(!(stk)->error);\
     assert((stk)->data);\
-    assert((stk)->capacity > 0);\
-    assert((stk)->file);\
-    assert((stk)->line);\
-    assert((stk)->error);
+    assert((stk)->capacity > 0);
 
-const int BASE_LENGTH = 5;
-const int EDA = 3802;
+#define RETURN_ERROR(stk, err)\
+(stk)->file = __FILE__;\
+(stk)->line = __LINE__;\
+return (stk)->error = (err);
+
+const int CAPACITY_UP_COEF = 2;
+const int CAPACITY_DOWN_COEF = 4;
 
 #endif

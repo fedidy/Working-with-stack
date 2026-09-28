@@ -3,24 +3,28 @@
 #include "stdio.h"
 #include "cassert"
 #include "stdlib.h"
-
+#include <cmath>
 
 
 typedef double stack_elem_t;
 #define PRINT_DATA "%lg"
+const double EDA = NAN;
 #include "stack.h"
 
 #include "realloc.h"
 #include "error_print.h"
+#include "file_reading.h"
 
-
+const int BASE_LENGTH = 5;
 
 #include "realloc.cpp"
+#include "error_print.cpp"
+
 
 int StackCtor(Stack_t *const stk, const int capacity);
 int StackPush(const Stack_t *const stk, int count);
-void PushElem(Stack_t *const stk, const stack_elem_t elem);
-
+int PushElem(Stack_t *const stk, const stack_elem_t elem);
+int StackPop(Stack_t *const stk, stack_elem_t *elem);
 
 
 int main() {
@@ -31,7 +35,8 @@ int main() {
     StackPush(&stk1, 10);
     StackVerify(&stk1);
 
-    double x = StackPop(&stk1);
+    stack_elem_t x = 0;
+    StackPop(&stk1, &x);
     StackVerify(&stk1);
 
     StackDtor(&stk1);
@@ -40,24 +45,22 @@ int main() {
 
 int StackCtor(Stack_t *const stk, const int capacity) {
     assert(stk);
-    assert(capacity > 0);
+    if (capacity <= 0) {
+        return stk->error = CAPACITY_CTOR_ERR;
+    }
 
     stk->capacity = capacity;
     stk->data = (stack_elem_t*) calloc(capacity, sizeof(stack_elem_t));
     if (!stk->data) {
-        stk->file = __FILE__;
-        stk->line = __LINE__;
-        return stk->error = CALLOC_ERR;
+        RETURN_ERROR(stk, CALLOC_ERR);
     }
     for (int i = 0; i < capacity; i++) {
         stk->data[i] = EDA;
     }
     stk->error = 0;
     stk->size = 0;
+    return NO_ERR;
 }
-
-
-
 
 
 int StackPush(Stack_t *const stk, const int count) {
@@ -67,19 +70,37 @@ int StackPush(Stack_t *const stk, const int count) {
     ReadElementsFromFile(tmp, count);
 
     for (int i = 0; i < count; i++) {
-        PushElem(stk, tmp[i]);
+        if (PushElem(stk, tmp[i]))
+            return stk->error;
     }
 
     free(tmp);
+    return NO_ERR;
 }
 
-void PushElem(Stack_t *const stk, const stack_elem_t elem) {
+int PushElem(Stack_t *const stk, const stack_elem_t elem) {
     ASSERT_OK(stk)
 
     (stk->size)++;
 
     if (stk->size == stk->capacity)
-        StackReallocUp(stk);
+        if (StackReallocUp(stk))
+            return stk->error;
 
     stk->data[stk->size] = elem;
+    return NO_ERR;
+}
+
+
+int StackPop(Stack_t *const stk, stack_elem_t *elem) {
+    ASSERT_OK(stk)
+
+    *elem = stk->data[stk->size];
+    stk->size--;
+
+    if (stk->size == stk->capacity / CAPACITY_DOWN_COEF)
+        if (StackReallocDown(stk))
+            return stk->error;
+
+    return NO_ERR;
 }
