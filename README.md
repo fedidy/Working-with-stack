@@ -1,2 +1,2 @@
-# working_with_stack
+# working-with-stack
 
