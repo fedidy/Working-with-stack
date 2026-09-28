@@ -9,20 +9,38 @@
 #define STACK_H
 
     //ON_DBG(__FILE__, __LINE__);
+
+/*
+struct error_data {
+    const char* file;
+    int line;
+    int error;
+};
+*/
+#include <cstddef>
+
 struct Stack_t {
     const char* file;
     int line;
+    int error;
     char* struct_name;
     stack_elem_t* data;
-    int size;
-    int capacity;
-    int error;
+    size_t size;
+    size_t capacity;
 };
 
 enum Stack_Errors {
     NO_ERR = 0,
+    STACK_DESTROYED,
+    TEMP_ERR,
     CAPACITY_CTOR_ERR,
     CALLOC_ERR,
+    DATA_POINTER_ZERO_ERR,
+    COUNT_ERR,
+    TEST_FILENAME_ERR,
+    FILE_OPEN_ERR,
+    FILE_POINTER_ZERO_ERR,
+    INSUFFICIENT_ELEM_ERR,
     REALLOC_UP_ERR,
     REALLOC_DOWN_ERR,
     PUSH_ERR,

@@ -19,20 +19,31 @@ const int BASE_LENGTH = 5;
 
 #include "realloc.cpp"
 #include "error_print.cpp"
+#include "file_reading.cpp"
+#include "mymath.cpp"
 
 
-int StackCtor(Stack_t *const stk, const int capacity);
-int StackPush(const Stack_t *const stk, int count);
+int StackCtor(Stack_t *const stk, const size_t capacity);
+int StackPush(Stack_t *const stk, const stack_elem_t *const data, const size_t count);
 int PushElem(Stack_t *const stk, const stack_elem_t elem);
-int StackPop(Stack_t *const stk, stack_elem_t *elem);
+int StackPop(Stack_t *const stk, stack_elem_t *const elem);
+int StackDtor(Stack_t *const stk);
 
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "NO test_filename: argc = %d\n", argc);
+        return TEST_FILENAME_ERR;
+    }
+    char* test_filename = argv[1];
     Stack_t stk1 {};
     StackCtor(&stk1, BASE_LENGTH);
     StackVerify(&stk1);
 
-    StackPush(&stk1, 10);
+
+    stack_elem_t* data = {};
+    ReadElemFromFile(data, 10, test_filename);
+    StackPush(&stk1, data, 10);
     StackVerify(&stk1);
 
     stack_elem_t x = 0;
@@ -43,7 +54,7 @@ int main() {
 }
 
 
-int StackCtor(Stack_t *const stk, const int capacity) {
+int StackCtor(Stack_t *const stk, const size_t capacity) {
     assert(stk);
     if (capacity <= 0) {
         return stk->error = CAPACITY_CTOR_ERR;
@@ -54,7 +65,7 @@ int StackCtor(Stack_t *const stk, const int capacity) {
     if (!stk->data) {
         RETURN_ERROR(stk, CALLOC_ERR);
     }
-    for (int i = 0; i < capacity; i++) {
+    for (size_t i = 0; i < capacity; i++) {
         stk->data[i] = EDA;
     }
     stk->error = 0;
@@ -63,18 +74,17 @@ int StackCtor(Stack_t *const stk, const int capacity) {
 }
 
 
-int StackPush(Stack_t *const stk, const int count) {
+int StackPush(Stack_t *const stk, const stack_elem_t *const data, const size_t count) {
     ASSERT_OK(stk)
 
-    stack_elem_t* tmp = (stack_elem_t*) calloc(count, sizeof(stack_elem_t));
-    ReadElementsFromFile(tmp, count);
+    if (!data)
+        return stk->error = DATA_POINTER_ZERO_ERR;
 
-    for (int i = 0; i < count; i++) {
-        if (PushElem(stk, tmp[i]))
+    for (size_t i = 0; i < count; i++) {
+        if (PushElem(stk, data[i]))
             return stk->error;
     }
 
-    free(tmp);
     return NO_ERR;
 }
 
@@ -92,7 +102,7 @@ int PushElem(Stack_t *const stk, const stack_elem_t elem) {
 }
 
 
-int StackPop(Stack_t *const stk, stack_elem_t *elem) {
+int StackPop(Stack_t *const stk, stack_elem_t *const elem) {
     ASSERT_OK(stk)
 
     *elem = stk->data[stk->size];
@@ -103,4 +113,18 @@ int StackPop(Stack_t *const stk, stack_elem_t *elem) {
             return stk->error;
 
     return NO_ERR;
+}
+
+int StackDtor(Stack_t *const stk) {
+    ASSERT_OK(stk)
+
+    stk->file = 0;
+    stk->line = 0;
+    stk->struct_name = 0;
+    free(stk->data);
+    stk->size = 0;
+    stk->capacity = 0;
+    stk->error = STACK_DESTROYED;
+
+    return 0;
 }
