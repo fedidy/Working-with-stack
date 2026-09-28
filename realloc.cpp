@@ -7,15 +7,21 @@
 int StackReallocUp(Stack_t *const stk) {
     ASSERT_OK(stk)
 
-    stk->capacity = stk->capacity * 2;
+    stk->capacity = stk->capacity * CAPACITY_UP_COEF;
     stk->data = (stack_elem_t*) realloc(stk->data, stk->capacity);
     if (!stk->data) {
-        stk->file = __FILE__;
-        stk->line = __LINE__;
-        return stk->error = REALLOC_ERR;
+        RETURN_ERROR(stk, REALLOC_UP_ERR)
     }
 
-    StackVerify(stk);
+    return StackVerify(stk);
+}
 
-    return NO_ERR;
+int StackReallocDown(Stack_t *const stk) {
+    ASSERT_OK(stk)
+
+    stk ->capacity = stk->capacity / CAPACITY_DOWN_COEF;
+    stk->data = (stack_elem_t*) realloc(stk->data, stk->capacity);
+    if (!stk->data) {
+        RETURN_ERROR(stk, REALLOC_DOWN_ERR)
+    }
 }

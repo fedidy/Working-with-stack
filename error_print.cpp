@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <cassert>
 
-
 #ifdef STACK_DEBUG
 int StackVerify(Stack_t *const stk) {
     assert(stk);
@@ -28,7 +27,9 @@ int StackVerify(Stack_t *const stk) {
         return NO_ERR;
 }
 #else
-int StackVerify(Stack_t *const stk) {}
+int StackVerify(Stack_t *const stk) {
+    return NO_ERR;
+}
 #endif
 
 
@@ -38,45 +39,47 @@ int StackError(const Stack_t *const stk) {
     switch (stk->error) {
         case NO_ERR: return 0;
         case CALLOC_ERR:
-            printf("CALLOC_ERR\n");
+            fprintf(stderr, "CALLOC_ERR\n");
             Print_Error(stk);
             break;
         case PUSH_ERR:;
-            printf("PUSH_ERR\n");
+            fprintf(stderr, "PUSH_ERR\n");
+            Print_Error(stk);
+            break;
+        default:
+            fprintf(stderr, "UNKNOWN_ERR\n");
             Print_Error(stk);
             break;
     }
-    return 1;
 }
 
 void Print_Error(const Stack_t *const stk) {
     assert(stk);
 
     if (stk->struct_name)
-        printf("Error in structure of type Stack_t named %s\n", stk->struct_name);
+        fprintf(stderr, "Error in structure of type Stack_t named %s\n", stk->struct_name);
     else
-        printf("NO STRUCTURE NAME OF TYPE Stack_t\n");
+        fprintf(stderr, "NO STRUCTURE NAME OF TYPE Stack_t\n");
 
-    printf("pointer to structure = [%p]", stk);
+    fprintf(stderr, "pointer to structure = [%p]\n", stk);
 
     if (stk->file)
-            printf("FILE = %s\n", stk->file);
+            fprintf(stderr, "FILE = %s\n", stk->file);
     else
-            printf("NO FILE NAME\n");
+            fprintf(stderr, "NO FILE NAME\n");
 
     if (stk->line)
-            printf("FILE = %d\n", stk->line);
+            fprintf(stderr, "FILE = %d\n", stk->line);
     else
-            printf("NO LINE NUMBER\n");
+            fprintf(stderr, "NO LINE NUMBER\n");
 
-    printf("stack capacity = %d\n", stk->capacity);
+    fprintf(stderr, "stack capacity = %d\n", stk->capacity);
     if (stk->capacity > 0)
         StackPrint(stk);
     else
-        printf("CAPACITY IS BELOW ZERO\n");
+        fprintf(stderr, "CAPACITY IS BELOW ZERO\n");
 
-    printf("size = %d\n", stk->size);
-
+    fprintf(stderr, "size = %d\n", stk->size);
 }
 
 void StackPrint(const Stack_t *const stk) {
@@ -85,8 +88,8 @@ void StackPrint(const Stack_t *const stk) {
 
     for (int i = 0; i < stk->capacity; i++) {
         if (stk->data[i] == EDA)
-            printf("data[%d] = " PRINT_DATA "\n", i, stk->data[i]);
+            fprintf(stderr, "data[%d] = " PRINT_DATA "\n", i, stk->data[i]);
         else
-            printf("(*) data[%d] = " PRINT_DATA "\n", i, stk->data[i]);
+            fprintf(stderr, "(*) data[%d] = " PRINT_DATA "\n", i, stk->data[i]);
     }
 }
