@@ -19,4 +19,27 @@ struct Stack_t {
     int error;
 };
 
+enum Stack_Errors {
+    NO_ERR = 0,
+    CALLOC_ERR,
+    REALLOC_ERR,
+    PUSH_ERR,
+    STRUCT_NAME_ERR,
+    FILE_NAME_ERR,
+    LINE_NUM_ERR,
+    CAPACITY_ERR
+};
+
+#define ASSERT_OK(stk) \
+    assert((stk));\
+    assert((stk)->error);\
+    assert((stk)->data);\
+    assert((stk)->capacity > 0);\
+    assert((stk)->file);\
+    assert((stk)->line);\
+    assert((stk)->error);
+
+const int BASE_LENGTH = 5;
+const int EDA = 3802;
+
 #endif
