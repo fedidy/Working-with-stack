@@ -6,14 +6,14 @@
 #include <cstdlib>
 
 int ReadElemFromFile(stack_elem_t *data, size_t count, const char *const test_filename) {
-    assert(data);
-
+    /*
     if (count < 0) {
         fprintf(stderr, "GOT count (OF ELEMENTS IN data) BELOW ZERO:"
                         "count = %zu, pointer to data = %p, filename = %s\n",
                          count, data, test_filename);
         return COUNT_ERR;
     }
+    */
 
     if (!test_filename) {
         fprintf(stderr, "GOT NO test_filename, CAN'T GET ANY ELEMENTS\n");
@@ -26,8 +26,14 @@ int ReadElemFromFile(stack_elem_t *data, size_t count, const char *const test_fi
         return FILE_OPEN_ERR;
     }
 
+    if (!data) {
+        fprintf(stderr, "CAN'T ALLOCATE MEMORY in %s:%d\n", __FILE__, __LINE__);
+        return CALLOC_ERR;
+    }
+
     int err = ScanFile(fp, data, count);
-    free(fp);
+    fclose(fp);
+    fprintf(stack_working_log, "in reading\n");
     return err;
 }
 
@@ -49,11 +55,21 @@ int ScanFile(FILE *const fp, stack_elem_t *const data, const size_t count) {
     }
     */
 
-    size_t read_num = fread(data, sizeof(stack_elem_t), count, fp);
+// ПЕРЕДЕЛАТЬ ФАЙЛ РИД
+
+    //size_t read_num = fread(data, sizeof(stack_elem_t), count, fp);
+    size_t read_num = 0;
+    for (size_t i = 0; i < count; i++) {
+        if (!fscanf(fp, PRINT_DATA, &data[i]))
+            break;
+        read_num++;
+    }
+
+    //кринге не там выводится
     if (read_num < count) {
         fprintf(stderr, "READ NOT ALL ELEMENTS: got %zu elements, expected %zu\n", read_num, count);
         fprintf(stderr, "file: %s, line: %d\n", __FILE__, __LINE__);
-        DataPrint(data, count);
+        DataPrint(stderr, data, count);
         return INSUFFICIENT_ELEM_ERR;
     }
 

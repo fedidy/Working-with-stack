@@ -18,7 +18,7 @@ int StackVerify(Stack_t *const stk) {
             stk->error = FILE_NAME_ERR;
         else if (stk->line)
             stk->error = LINE_NUM_ERR;
-        else if (stk->capacity <= 0)
+        else if (stk->capacity == 0)
             stk->error = CAPACITY_ERR;
     }
 
@@ -37,21 +37,31 @@ int StackVerify(Stack_t *const stk) {
 int StackError(const Stack_t *const stk) {
     assert(stk);
 
+    /*
     switch (stk->error) {
         case NO_ERR: return 0;
-        case CALLOC_ERR:
+
+        case CALLOC_ERR: case P
             fprintf(stderr, "CALLOC_ERR\n");
             PrintError(stk); break;
-        case PUSH_ERR:;
+        case PUSH_ERR:
             fprintf(stderr, "PUSH_ERR\n");
             PrintError(stk); break;
         default:
             fprintf(stderr, "UNKNOWN_ERR\n");
             PrintError(stk); break;
     }
+    */
 
-    return TEMP_ERR;
+    if (!stk->error)
+        return NO_ERR;
+    fprintf(stderr, "Error code = %d\n", stk->error);
+    PrintError(stk);
 
+    return stk->error;
+
+
+    /*
     if (stk->struct_name)
         fprintf(stderr, "Error in structure of type Stack_t named %s\n", stk->struct_name);
     else
@@ -71,11 +81,12 @@ int StackError(const Stack_t *const stk) {
 
     fprintf(stderr, "stack capacity = %zu\n", stk->capacity);
     if (stk->capacity > 0)
-        DataPrint(stk->data, stk->capacity);
+        DataPrint(stderr, stk->data, stk->capacity);
     else
         fprintf(stderr, "CAPACITY IS BELOW ZERO\n");
 
     fprintf(stderr, "size = %zu\n", stk->size);
+    */
 }
 
 
@@ -83,41 +94,41 @@ void PrintError(const Stack_t *const stk) {
     assert(stk);
 
     if (stk->struct_name)
-        printf("Error in structure of type Stack_t named %s\n", stk->struct_name);
+        fprintf(stderr, "Error in structure of type Stack_t named %s\n", stk->struct_name);
     else
-        printf("NO STRUCTURE NAME OF TYPE Stack_t\n");
+        fprintf(stderr, "NO STRUCTURE NAME OF TYPE Stack_t\n");
 
-    printf("pointer to structure = [%p]", stk);
+    fprintf(stderr, "pointer to structure = [%p]\n", stk);
 
     if (stk->file)
-            printf("FILE = %s\n", stk->file);
+            fprintf(stderr, "FILE = %s\n", stk->file);
     else
-            printf("NO FILE NAME\n");
+            fprintf(stderr, "NO FILE NAME\n");
 
     if (stk->line)
-            printf("FILE = %d\n", stk->line);
+            fprintf(stderr, "LINE = %d\n", stk->line);
     else
-            printf("NO LINE NUMBER\n");
+            fprintf(stderr, "NO LINE NUMBER\n");
 
-    printf("stack capacity = %zu\n", stk->capacity);
+    fprintf(stderr, "stack capacity = %zu\n", stk->capacity);
     if (stk->capacity > 0)
-        DataPrint(stk->data, stk->capacity);
+        DataPrint(stderr, stk->data, stk->capacity);
     else
-        printf("CAPACITY IS BELOW ZERO\n");
+        fprintf(stderr, "CAPACITY IS BELOW ZERO\n");
 
-    printf("size = %zu\n", stk->size);
+    fprintf(stderr, "size = %zu\n", stk->size);
 
 }
 
 
-void DataPrint(const stack_elem_t *const data, const size_t capacity) {
+void DataPrint(FILE* output_file, const stack_elem_t *const data, const size_t capacity) {
     assert(data);
     assert(capacity > 0);
 
     for (size_t i = 0; i < capacity; i++) {
         if (CompareDouble(data[i], EDA))
-            fprintf(stderr, "data[%zu] = " PRINT_DATA "\n", i, data[i]);
+            fprintf(output_file, "data[%zu] = " PRINT_DATA "\n", i, data[i]);
         else
-            fprintf(stderr, "(*) data[%zu] = " PRINT_DATA "\n", i, data[i]);
+            fprintf(output_file, "(*) data[%zu] = " PRINT_DATA "\n", i, data[i]);
     }
 }

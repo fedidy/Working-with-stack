@@ -5,6 +5,8 @@
 #include "stdlib.h"
 #include <cmath>
 
+//???????????????
+FILE *stack_working_log = fopen("stack_working.log", "w");
 
 typedef double stack_elem_t;
 #define PRINT_DATA "%lg"
@@ -21,7 +23,6 @@ const int BASE_LENGTH = 5;
 #include "error_print.cpp"
 #include "file_reading.cpp"
 #include "mymath.cpp"
-
 
 int StackCtor(Stack_t *const stk, const size_t capacity);
 int StackPush(Stack_t *const stk, const stack_elem_t *const data, const size_t count);
@@ -40,10 +41,16 @@ int main(int argc, char* argv[]) {
     StackCtor(&stk1, BASE_LENGTH);
     StackVerify(&stk1);
 
-
-    stack_elem_t* data = {};
-    ReadElemFromFile(data, 10, test_filename);
-    StackPush(&stk1, data, 10);
+    size_t count = 10;
+    stack_elem_t* data = (stack_elem_t*) calloc(count, sizeof(stack_elem_t));
+    if (!data) {
+        fprintf(stderr, "CAN'T ALLOCATE MEMORY in %s:%d\n", __FILE__, __LINE__);
+        return CALLOC_ERR;
+    }
+    ReadElemFromFile(data, count, test_filename);
+    fprintf(stack_working_log, "data after reading\n");
+    DataPrint(stack_working_log, data, count);
+    StackPush(&stk1, data, count);
     StackVerify(&stk1);
 
     stack_elem_t x = 0;
@@ -57,11 +64,11 @@ int main(int argc, char* argv[]) {
 int StackCtor(Stack_t *const stk, const size_t capacity) {
     assert(stk);
     if (capacity <= 0) {
-        return stk->error = CAPACITY_CTOR_ERR;
+        RETURN_ERROR(stk, CAPACITY_CTOR_ERR)
     }
 
     stk->capacity = capacity;
-    stk->data = (stack_elem_t*) calloc(capacity, sizeof(stack_elem_t));
+    stk->data = (stack_elem_t*) calloc(capacity + 1, sizeof(stack_elem_t));
     if (!stk->data) {
         RETURN_ERROR(stk, CALLOC_ERR);
     }
@@ -77,10 +84,13 @@ int StackCtor(Stack_t *const stk, const size_t capacity) {
 int StackPush(Stack_t *const stk, const stack_elem_t *const data, const size_t count) {
     ASSERT_OK(stk)
 
-    if (!data)
-        return stk->error = DATA_POINTER_ZERO_ERR;
+    if (!data) {
+        RETURN_ERROR(stk, DATA_POINTER_ZERO_ERR);
+    }
 
     for (size_t i = 0; i < count; i++) {
+        fprintf(stack_working_log, "before pushing element = " PRINT_DATA "\n", data[i]);
+        DataPrint(stack_working_log, stk->data, stk->capacity);
         if (PushElem(stk, data[i]))
             return stk->error;
     }
@@ -91,17 +101,24 @@ int StackPush(Stack_t *const stk, const stack_elem_t *const data, const size_t c
 int PushElem(Stack_t *const stk, const stack_elem_t elem) {
     ASSERT_OK(stk)
 
-    (stk->size)++;
-
-    if (stk->size == stk->capacity)
-        if (StackReallocUp(stk))
+    if (stk->size + 1 == stk->capacity) {
+        if (StackReallocUp(stk)) {
             return stk->error;
+        }
+        fprintf(stack_working_log, "capacity after realloc = %zu\n", stk->capacity);
+    }
+    fprintf(stack_working_log, "capacity new = %zu\n", stk->capacity);
 
     stk->data[stk->size] = elem;
+
+    stk->size++;
+    fprintf(stack_working_log, "size = %zu, capacity = %zu\n", stk->size, stk->capacity);
+
+
     return NO_ERR;
 }
 
-
+//remake
 int StackPop(Stack_t *const stk, stack_elem_t *const elem) {
     ASSERT_OK(stk)
 
