@@ -7,17 +7,11 @@ int StackReallocUp(Stack_t *const stk) {
 
     stk->capacity = stk->capacity * CAPACITY_UP_COEF;
     stk->data = StackRecalloc(stk);
-    if (stk->error)
-        return stk->error;
+    if (stk->err.err_code)
+        return stk->err.err_code;
     if (!stk->data) {
-        RETURN_ERROR(stk, REALLOC_UP_ERR)
+        RETURN_ERROR(stk->err, REALLOC_UP_ERR)
     }
-    /*
-    stk->data = (stack_elem_t*) realloc(stk->data, sizeof(stack_elem_t) * stk->capacity);
-    if (!stk->data) {
-        RETURN_ERROR(stk, REALLOC_UP_ERR)
-    }
-    */
 
     DataPrint(stack_working_log, stk->data, stk->capacity);
 
@@ -31,7 +25,7 @@ int StackReallocDown(Stack_t *const stk) {
     stk->capacity = stk->capacity / CAPACITY_DOWN_COEF;
     stk->data = (stack_elem_t*) realloc(stk->data, stk->capacity);
     if (!stk->data) {
-        RETURN_ERROR(stk, REALLOC_DOWN_ERR)
+        RETURN_ERROR(stk->err, REALLOC_DOWN_ERR)
     }
 
     return StackVerify(stk);
@@ -43,7 +37,7 @@ stack_elem_t* StackRecalloc(Stack_t *const stk) {
 
     stk->data = (stack_elem_t*) realloc(stk->data, sizeof(stack_elem_t) * stk->capacity);
     if (!stk->data) {
-        stk->error = DATA_RECALLOC_ERR;
+        stk->err.err_code = DATA_RECALLOC_ERR;
         return 0;
     }
 

@@ -1,19 +1,15 @@
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "file_reading.h"
 #include "stack.h"
 #include "error_print.h"
 
-#include <cstdio>
-#include <cstdlib>
+int ReadElemFromFile(stack_elem_t *data, const size_t count, const char *const test_filename) {
+    fprintf(stack_working_log , "Started reading from file:"
+                    "count = %zu, pointer to data = %p, filename = %s\n",
+                     count, data, test_filename);
 
-int ReadElemFromFile(stack_elem_t *data, size_t count, const char *const test_filename) {
-    /*
-    if (count < 0) {
-        fprintf(stderr, "GOT count (OF ELEMENTS IN data) BELOW ZERO:"
-                        "count = %zu, pointer to data = %p, filename = %s\n",
-                         count, data, test_filename);
-        return COUNT_ERR;
-    }
-    */
 
     if (!test_filename) {
         fprintf(stderr, "GOT NO test_filename, CAN'T GET ANY ELEMENTS\n");
@@ -33,7 +29,6 @@ int ReadElemFromFile(stack_elem_t *data, size_t count, const char *const test_fi
 
     int err = ScanFile(fp, data, count);
     fclose(fp);
-    fprintf(stack_working_log, "in reading\n");
     return err;
 }
 

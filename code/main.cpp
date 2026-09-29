@@ -1,8 +1,8 @@
 #define STACK_DEBUG 1
 
-#include "stdio.h"
-#include "cassert"
-#include "stdlib.h"
+#include <stdio.h>
+#include <assert.h>
+#include <stdlib.h>
 #include <cmath>
 
 //???????????????
@@ -48,8 +48,9 @@ int main(int argc, char* argv[]) {
         return CALLOC_ERR;
     }
     ReadElemFromFile(data, count, test_filename);
-    fprintf(stack_working_log, "data after reading\n");
+    fprintf(stack_working_log, "Data after reading from %s\n", test_filename);
     DataPrint(stack_working_log, data, count);
+
     StackPush(&stk1, data, count);
     StackVerify(&stk1);
 
@@ -68,14 +69,14 @@ int StackCtor(Stack_t *const stk, const size_t capacity) {
     }
 
     stk->capacity = capacity;
-    stk->data = (stack_elem_t*) calloc(capacity + 1, sizeof(stack_elem_t));
+    stk->data = (stack_elem_t*) calloc(capacity, sizeof(stack_elem_t));
     if (!stk->data) {
         RETURN_ERROR(stk, CALLOC_ERR);
     }
     for (size_t i = 0; i < capacity; i++) {
         stk->data[i] = EDA;
     }
-    stk->error = 0;
+    stk->err.err_code = 0;
     stk->size = 0;
     return NO_ERR;
 }
@@ -92,7 +93,7 @@ int StackPush(Stack_t *const stk, const stack_elem_t *const data, const size_t c
         fprintf(stack_working_log, "before pushing element = " PRINT_DATA "\n", data[i]);
         DataPrint(stack_working_log, stk->data, stk->capacity);
         if (PushElem(stk, data[i]))
-            return stk->error;
+            return stk->err.err_code;
     }
 
     return NO_ERR;
@@ -103,7 +104,7 @@ int PushElem(Stack_t *const stk, const stack_elem_t elem) {
 
     if (stk->size + 1 == stk->capacity) {
         if (StackReallocUp(stk)) {
-            return stk->error;
+            return stk->err.err_code;
         }
         fprintf(stack_working_log, "capacity after realloc = %zu\n", stk->capacity);
     }
@@ -127,7 +128,7 @@ int StackPop(Stack_t *const stk, stack_elem_t *const elem) {
 
     if (stk->size == stk->capacity / CAPACITY_DOWN_COEF)
         if (StackReallocDown(stk))
-            return stk->error;
+            return stk->err.err_code;
 
     return NO_ERR;
 }
@@ -141,7 +142,7 @@ int StackDtor(Stack_t *const stk) {
     free(stk->data);
     stk->size = 0;
     stk->capacity = 0;
-    stk->error = STACK_DESTROYED;
+    stk->err.err_code = STACK_DESTROYED;
 
     return 0;
 }
