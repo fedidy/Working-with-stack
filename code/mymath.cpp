@@ -1,5 +1,4 @@
 #include <math.h>
-#include <assert.h>
 
 const double EPSILON = 1e-6;
 
