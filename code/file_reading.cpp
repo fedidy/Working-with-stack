@@ -1,43 +1,44 @@
-
-#include "file_reading.h"
 #include "stack.h"
+#include "file_reading.h"
 #include "error_print.h"
 
-int ReadElemFromFile(stack_elem_t *data, const size_t count, const char *const test_filename) {
-    fprintf(stack_working_log , "Started reading from file:"
-                    "count = %zu, pointer to data = %p, filename = %s\n",
-                     count, data, test_filename);
+int ReadElemFromFile(stack_elem_t *data, const size_t count, const char *const test_filename, Error_info *err_inf) {
+    PRINT_LOG("Started reading from file:\n"
+              "count = %zu, pointer to data = %p, filename = %s\n", count, data, test_filename);
 
-
+    ON_DBG(
     if (!test_filename) {
         fprintf(stderr, "GOT NO test_filename, CAN'T GET ANY ELEMENTS\n");
-        return TEST_FILENAME_ERR;
+        RETURN_ERROR(*err_inf, TEST_FILENAME_ERR);
     }
+    )
 
     FILE* fp = fopen(test_filename, "r");
     if (!fp) {
         fprintf(stderr, "CAN'T OPEN FILE WITH TESTS: test_filename = %s\n", test_filename);
-        return FILE_OPEN_ERR;
+        RETURN_ERROR(*err_inf, FILE_OPEN_ERR);
     }
-
+    ON_DBG(
     if (!data) {
-        fprintf(stderr, "CAN'T ALLOCATE MEMORY in %s:%d\n", __FILE__, __LINE__);
-        return CALLOC_ERR;
+        fprintf(stderr, "CAN'T ALLOCATE MEMORY in %s:%s:%d\n", __FILE__, __func__, __LINE__);
+        RETURN_ERROR(*err_inf, CALLOC_ERR);
     }
+    )
 
-    int err = ScanFile(fp, data, count);
+    int err = ScanFile(fp, data, count, err_inf);
     fclose(fp);
     return err;
 }
 
 
-int ScanFile(FILE *const fp, stack_elem_t *const data, const size_t count) {
+int ScanFile(FILE *const fp, stack_elem_t *const data, const size_t count, Error_info *err_inf) {
     assert(data);
 
+    ON_DBG(
     if (!fp) {
         fprintf(stderr, "POINTER IN FILE TO SCAN IS ZERO\n");
-        return FILE_POINTER_ZERO_ERR;
-    }
+        RETURN_ERROR(*err_inf, FILE_POINTER_ZERO_ERR)
+    })
 
     /*
     if (count < 0) {
@@ -48,9 +49,6 @@ int ScanFile(FILE *const fp, stack_elem_t *const data, const size_t count) {
     }
     */
 
-// ПЕРЕДЕЛАТЬ ФАЙЛ РИД
-
-    //size_t read_num = fread(data, sizeof(stack_elem_t), count, fp);
     size_t read_num = 0;
     for (size_t i = 0; i < count; i++) {
         if (!fscanf(fp, PRINT_DATA, &data[i]))

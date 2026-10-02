@@ -1,6 +1,6 @@
 #include "error_print.h"
 
-#ifdef STACK_DEBUG
+#if STACK_DEBUG == 1
 int StackVerify(Stack_t *const stk) {
     assert(stk);
 
@@ -33,6 +33,7 @@ int StackVerify(Stack_t *const stk) {
 #endif
 
 
+#if STACK_DEBUG > 0
 int PrintStackError(const Stack_t *const stk) {
     assert(stk);
 
@@ -91,6 +92,9 @@ int PrintStackError(const Stack_t *const stk) {
 
     return stk->err.err_code;
 }
+#else
+int PrintStackError(const Stack_t *const stk) {return 0;}
+#endif
 
 
 void DataPrint(FILE* output_file, const stack_elem_t *const data, const size_t capacity) {
@@ -98,7 +102,7 @@ void DataPrint(FILE* output_file, const stack_elem_t *const data, const size_t c
     assert(capacity > 0);
 
     for (size_t i = 0; i < capacity; i++) {
-        if (CompareDouble(data[i], EDA))
+        if (CompareDouble(data[i], DATA_ZERO))
             fprintf(output_file, "data[%zu] = " PRINT_DATA "\n", i, data[i]);
         else
             fprintf(output_file, "(*) data[%zu] = " PRINT_DATA "\n", i, data[i]);
@@ -106,30 +110,42 @@ void DataPrint(FILE* output_file, const stack_elem_t *const data, const size_t c
 }
 
 
+#ifdef LOG_DBG
 int PrintStackInfo(const Stack_t *const stk) {
     assert(stk);
 
-    fprintf(stack_working_log, "======================Stack_t %s======================\n", stk->stack_name);
+    PRINT_LOG("======================Stack_t %s======================\n", stk->stack_name);
 
-    fprintf(stack_working_log, "Pointer to structure = [%p]\n", stk);
+    PRINT_LOG("Pointer to structure = [%p]\n", stk);
 
-    fprintf(stack_working_log, "Error info:\n");
-    fprintf(stack_working_log, "   Error code = %d\n", stk->err.err_code);
-    fprintf(stack_working_log, "   Filename: %s\n", stk->err.file);
-    fprintf(stack_working_log, "   Func: %s\n", stk->err.func);
-    fprintf(stack_working_log, "    Line number = %d\n", stk->err.line);
+    PRINT_LOG("Error info:\n");
+    PRINT_LOG("    Error code = %d\n", stk->err.err_code);
+    PRINT_LOG("    Filename: %s\n", stk->err.file);
+    PRINT_LOG("    Func: %s\n", stk->err.func);
+    PRINT_LOG("    Line number = %d\n", stk->err.line);
 
-    fprintf(stack_working_log, "Data creation info:\n");
-        fprintf(stack_working_log, "   Filename: %s\n", stk->cr_info.file);
-        fprintf(stack_working_log, "   Func: %s\n", stk->cr_info.func);
-        fprintf(stack_working_log, "   Line number = %d\n", stk->cr_info.line);
+    PRINT_LOG("Data creation info:\n");
+    PRINT_LOG("    Filename: %s\n", stk->cr_info.file);
+    PRINT_LOG("    Func: %s\n", stk->cr_info.func);
+    PRINT_LOG("    Line number = %d\n", stk->cr_info.line);
 
-    fprintf(stack_working_log, "Stack capacity = %zu\n", stk->capacity);
-    fprintf(stack_working_log, "size = %zu\n", stk->size);
+    PRINT_LOG("Stack capacity = %zu\n", stk->capacity);
+    PRINT_LOG("size = %zu\n", stk->size);
 
+    LOG_DBG(
     DataPrint(stack_working_log, stk->data, stk->capacity);
+    )
 
-    fprintf(stack_working_log, "======================Ended======================\n");
+    PRINT_LOG("======================Ended======================\n");
 
+    ON_DBG(
     return stk->err.err_code;
+    )
+    return 0; //ебаные варнинги некрасиво выглядят
 }
+#else
+int PrintStackInfo(const Stack_t *const stk) {
+    return 0;
+}
+#endif
+

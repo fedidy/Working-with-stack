@@ -1,9 +1,15 @@
-#define STACK_DEBUG 1
-
-#if STACK_DEBUG == 1
+#if STACK_DEBUG > 0
 #define ON_DBG(...) __VA_ARGS__
 #else
 #define ON_DBG(...)
+#endif
+
+#if STACK_DEBUG > 1
+#define LOG_DBG(...) __VA_ARGS__
+#define PRINT_LOG(...) fprintf(stack_working_log, __VA_ARGS__)
+#else
+#define LOG_DBG(...)
+#define PRINT_LOG(...)
 #endif
 
 
@@ -11,6 +17,10 @@
 #define STACK_H
 
 #include <stddef.h>
+
+typedef double stack_elem_t;
+#define PRINT_DATA "%lg"
+const double DATA_ZERO = NAN;
 
 struct Error_info {
     int err_code;
@@ -62,17 +72,24 @@ enum Stack_Errors {
 
 #define ASSERT_OK(stk) {\
     assert((stk));\
-    assert((stk)->err.err_code == 0);\
     assert((stk)->data);\
+    ON_DBG(\
+    assert((stk)->err.err_code == 0);\
+    )\
     /*assert((stk)->capacity > 0);*/\
 }
 
+#if STACK_DEBUG > 0
+#define RET_ERR
 #define RETURN_ERROR(err_info, err) {\
 (err_info).file = __FILE__;\
 (err_info).func = __func__;\
 (err_info).line = __LINE__;\
 return (err_info).err_code = (err);\
 }
+#else
+#define RETURN_ERROR(err_info, err) {abort();}
+#endif
 
 const int CAPACITY_UP_COEF = 2;
 const int CAPACITY_DOWN_COEF = 4;

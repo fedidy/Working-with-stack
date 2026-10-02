@@ -1,18 +1,14 @@
-#define STACK_DEBUG 1
-
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <math.h>
 
 //???????????????
-FILE *stack_working_log = fopen("stack_working.log", "w");
 
-typedef double stack_elem_t;
-#define PRINT_DATA "%lg"
-const double EDA = NAN;
+
 #include "stack.h"
 
+LOG_DBG(FILE *stack_working_log = fopen("stack_working.log", "w");)
 #include "realloc.h"
 #include "error_print.h"
 #include "file_reading.h"
@@ -47,16 +43,16 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "CAN'T ALLOCATE MEMORY in %s:%d\n", __FILE__, __LINE__);
         return CALLOC_ERR;
     }
-    ReadElemFromFile(data, count, test_filename);
-    fprintf(stack_working_log, "Data after reading from %s\n", test_filename);
-    DataPrint(stack_working_log, data, count);
+
+    Error_info err_inf= {};
+    ReadElemFromFile(data, count, test_filename, &err_inf);
+    PRINT_LOG("Data after reading from %s\n", test_filename);
+    LOG_DBG(DataPrint(stack_working_log, data, count));
 
     StackPush(&stk1, data, count);
-    StackVerify(&stk1);
 
     stack_elem_t x = 0;
     StackPop(&stk1, &x);
-    StackVerify(&stk1);
 
     StackDtor(&stk1);
 }
@@ -65,48 +61,69 @@ int main(int argc, char* argv[]) {
 int StackCtor(Stack_t *const stk, const size_t capacity, const char *const stack_name) {
     assert(stk);
     if (capacity <= 0) {
+        #ifdef RET_ERR
         RETURN_ERROR(stk->err, CAPACITY_CTOR_ERR)
+        #endif
     }
     if (!stack_name) {
+        #ifdef RET_ERR
         RETURN_ERROR(stk->err, STRUCT_NAME_ERR)
+        #endif
     }
 
     stk->stack_name = stack_name;
 
+    ON_DBG(
     stk->cr_info.file = __FILE__;
     stk->cr_info.func = __func__;
     stk->cr_info.line = __LINE__;
+    )
 
     stk->capacity = capacity;
     stk->data = (stack_elem_t*) calloc(capacity, sizeof(stack_elem_t));
     if (!stk->data) {
+        #ifdef RET_ERR
         RETURN_ERROR(stk->err, CALLOC_ERR);
+        #endif
     }
     for (size_t i = 0; i < capacity; i++) {
-        stk->data[i] = EDA;
+        stk->data[i] = DATA_ZERO;
     }
     stk->size = 0;
+    #ifdef RET_ERR
     RETURN_ERROR(stk->err, NO_ERR)
+    #endif
+    return 0;
 }
 
 
 int StackPush(Stack_t *const stk, const stack_elem_t *const data, const size_t count) {
+    PRINT_LOG("Started StackPush\n");
     ON_DBG(
-    fprintf(stack_working_log, "Started StackPush\n");
     PrintStackInfo(stk);
     )
     ASSERT_OK(stk)
 
     if (!data) {
+        #ifdef RET_ERR
         RETURN_ERROR(stk->err, DATA_POINTER_ZERO_ERR);
+        #endif
     }
 
     for (size_t i = 0; i < count; i++) {
-        fprintf(stack_working_log, "Before pushing element = " PRINT_DATA "\n", data[i]);
-        DataPrint(stack_working_log, stk->data, stk->capacity);
-        if (PushElem(stk, data[i]))
-            return stk->err.err_code;
+        ON_DBG(
+        PRINT_LOG("Before pushing element = " PRINT_DATA "\n", data[i]);
+        LOG_DBG(DataPrint(stack_working_log, stk->data, stk->capacity);)
+        )
+        if (PushElem(stk, data[i])) {
+            #ifdef RET_ERR
+            RETURN_ERROR
+            (stk->err, err_code);
+            #endif
+        }
     }
+
+    StackVerify(stk);
 
     return NO_ERR;
 }
@@ -116,16 +133,18 @@ int PushElem(Stack_t *const stk, const stack_elem_t elem) {
 
     if (stk->size + 1 == stk->capacity) {
         if (StackReallocUp(stk)) {
+            ON_DBG(
             return stk->err.err_code;
+            )
         }
-        fprintf(stack_working_log, "capacity after realloc = %zu\n", stk->capacity);
+        PRINT_LOG("capacity after realloc = %zu\n", stk->capacity);
     }
-    fprintf(stack_working_log, "capacity new = %zu\n", stk->capacity);
+    PRINT_LOG("capacity new = %zu\n", stk->capacity);
 
     stk->data[stk->size] = elem;
 
     stk->size++;
-    fprintf(stack_working_log, "size = %zu, capacity = %zu\n", stk->size, stk->capacity);
+    PRINT_LOG("size = %zu, capacity = %zu\n", stk->size, stk->capacity);
 
 
     return NO_ERR;
@@ -139,8 +158,11 @@ int StackPop(Stack_t *const stk, stack_elem_t *const elem) {
     stk->size--;
 
     if (stk->size == stk->capacity / CAPACITY_DOWN_COEF)
-        if (StackReallocDown(stk))
+        if (StackReallocDown(stk)) {
+            ON_DBG(
             return stk->err.err_code;
+            )
+        }
 
     return NO_ERR;
 }
@@ -148,19 +170,22 @@ int StackPop(Stack_t *const stk, stack_elem_t *const elem) {
 int StackDtor(Stack_t *const stk) {
     ASSERT_OK(stk)
 
+    ON_DBG(
+    stk->cr_info.file = 0;
+    stk->cr_info.func = 0;
+    stk->cr_info.line = 0;
+
     stk->err.file = 0;
     stk->err.func = 0;
     stk->err.line = 0;
 
-    stk->cr_info.file = 0;
-    stk->cr_info.func = 0;
-    stk->cr_info.line = 0;
+    stk->err.err_code = STACK_DESTROYED;
+    )
 
     stk->stack_name = 0;
     free(stk->data);
     stk->size = 0;
     stk->capacity = 0;
-    stk->err.err_code = STACK_DESTROYED;
 
     return 0;
 }
