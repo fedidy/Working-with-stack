@@ -1,8 +1,8 @@
 #ifndef REALLOC_H
 #define REALLOC_H
 
-#include <cstddef>
-#include <cassert>
+#include <stddef.h>
+#include <assert.h>
 
 int StackReallocUp(Stack_t *const stk);
 int StackReallocDown(Stack_t *const stk);

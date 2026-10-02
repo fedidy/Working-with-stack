@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
 
 #include "file_reading.h"
 #include "stack.h"

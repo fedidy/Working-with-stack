@@ -12,5 +12,6 @@
 int StackVerify(Stack_t *const stk);
 int PrintStackError(const Stack_t *const stk);
 void DataPrint(FILE* output_file, const stack_elem_t *const data, const size_t capacity);
+int PrintStackInfo(const Stack_t *const stk);
 
 #endif

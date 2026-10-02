@@ -1,5 +1,5 @@
-#include "realloc.h"
 #include "stack.h"
+#include "realloc.h"
 #include "error_print.h"
 
 int StackReallocUp(Stack_t *const stk) {

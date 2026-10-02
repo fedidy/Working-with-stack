@@ -19,13 +19,18 @@ struct Error_info {
     int line;
 };
 
+struct Creation_info {
+    const char* file;
+    const char* func;
+    int line;
+};
+
 struct Stack_t {
-    ON_DBG(Error_info err;
-    const char* creation_file;
-    const char* creation_func;
-    const char* creation_line;
+    ON_DBG(
+    Error_info err;
+    Creation_info cr_info;
     )
-    char* struct_name;
+    const char* stack_name;
     stack_elem_t* data;
     size_t size;
     size_t capacity;
@@ -33,6 +38,7 @@ struct Stack_t {
 
 enum Stack_Errors {
     NO_ERR = 0,
+    UNKNOWN_ERR,
     STACK_DESTROYED,
     TEMP_ERR,
     CAPACITY_CTOR_ERR,
@@ -49,13 +55,14 @@ enum Stack_Errors {
     PUSH_ERR,
     STRUCT_NAME_ERR,
     FILE_NAME_ERR,
+    FUNC_NAME_ERR,
     LINE_NUM_ERR,
     CAPACITY_ERR
 };
 
 #define ASSERT_OK(stk) {\
     assert((stk));\
-    assert(!(stk)->err.err_code);\
+    assert((stk)->err.err_code == 0);\
     assert((stk)->data);\
     /*assert((stk)->capacity > 0);*/\
 }
