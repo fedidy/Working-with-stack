@@ -14,8 +14,7 @@ CC = g++
 CODE = code/main.cpp \
        code/realloc.cpp \
        code/stack_func.cpp \
-       code/error_print.cpp \
-       code/file_reading.cpp
+       code/error_print.cpp
 
 MODE ?= debug
 
@@ -24,7 +23,7 @@ ifeq ($(MODE), debug)
 else ifeq ($(MODE), log)
 	CFLAGS += ${SANITIZER} -D STACK_DEBUG=2
 else ifeq ($(MODE), release)
-	CFLAGS += -DNDEBUG -D STACK_DEBUG=0 -O2
+	CFLAGS += -D NDEBUG -D STACK_DEBUG=0 -O2
 endif
 
 stack.out: ${CODE}
