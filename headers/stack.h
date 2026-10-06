@@ -1,62 +1,87 @@
+#ifndef STACK_H
+#define STACK_H
+
 #if STACK_DEBUG > 0
 #define ON_DBG(...) __VA_ARGS__
 #else
 #define ON_DBG(...)
+typedef int Error_info;
 #endif
 
 #if STACK_DEBUG > 1
 #define LOG_DBG(...) __VA_ARGS__
-#define PRINT_LOG(...) fprintf(stack_working_log, __VA_ARGS__)
+#define PRINT_LOG(...) fprintf(stderr, __VA_ARGS__)
 #else
 #define LOG_DBG(...)
 #define PRINT_LOG(...)
 #endif
 
-
-#ifndef STACK_H
-#define STACK_H
-
+// вынести в main
 #include <stddef.h>
+#include <math.h>
+
 
 typedef double stack_elem_t;
 #define PRINT_DATA "%lg"
-const double DATA_ZERO = NAN;
+const double NO_DATA = NAN; // отказаться согласовано
 
+
+// сделать макрос для заполнения
+#if STACK_DEBUG > 0
+struct Position_info {
+    const char* file;
+    const char* func;
+    int line;
+};
+#define GET_POSITION(position) {\
+(position).file = __FILE__;\
+(position).func = __func__;\
+(position).line = __LINE__;\
+}
+
+// переделать под структуру местоположения в коде
 struct Error_info {
-    int err_code;
-    const char* file;
-    const char* func;
-    int line;
+    Position_info pos;
+    int error_code;
+    //const char* comment;
 };
+#define WRITE_ERR(err_struct, err_code) {\
+GET_POSITION((err_struct).pos);\
+(err_struct).error_code = (err_code);\
+}
+#define RETURN_ERR(err_code) {\
+Error_info err_info_do_not_use = {};\
+WRITE_ERR(err_info_do_not_use, (err_code))\
+return err_info_do_not_use;\
+}
+#define RETURN_NO_ERR {\
+Error_info err_info_do_not_use = {};\
+WRITE_ERR(err_info_do_not_use, NO_ERR)\
+return err_info_do_not_use;\
+}
+#define RETURN_ERROR_IF_GOT(err_info) {\
+    if (!(err_info).error_code) {\
+        return (err_info);\
+    }\
+}
+#else
+#define GET_POSITION(position) {}
+#define WRITE_ERR(err_struct, err_code) {err_struct = -1;}
+#define RETURN_ERR(err_code) {return (err_code);}
+#define RETURN_NO_ERR {return 0;}
+#define RETURN_ERROR_IF_GOT(err_code) {\
+    if (!(err_code)) {\
+        return (err_code);\
+    }\
+}
+#endif
 
-struct Creation_info {
-    const char* file;
-    const char* func;
-    int line;
-};
-
-struct Stack_t {
-    ON_DBG(
-    Error_info err;
-    Creation_info cr_info;
-    )
-    const char* stack_name;
-    stack_elem_t* data;
-    size_t size;
-    size_t capacity;
-};
 
 enum Stack_Errors {
     NO_ERR = 0,
-    UNKNOWN_ERR,
     STACK_DESTROYED,
-    TEMP_ERR,
-    CAPACITY_CTOR_ERR,
     CALLOC_ERR,
     DATA_POINTER_ZERO_ERR,
-    COUNT_ERR,
-    TEST_FILENAME_ERR,
-    FILE_OPEN_ERR,
     FILE_POINTER_ZERO_ERR,
     INSUFFICIENT_ELEM_ERR,
     REALLOC_UP_ERR,
@@ -70,28 +95,33 @@ enum Stack_Errors {
     CAPACITY_ERR
 };
 
+enum Other_Error {
+    FILE_OPEN_ERR = 1000,
+    TEST_FILENAME_ERR
+};
+
 #define ASSERT_OK(stk) {\
     assert((stk));\
     assert((stk)->data);\
-    ON_DBG(\
-    assert((stk)->err.err_code == 0);\
-    )\
-    /*assert((stk)->capacity > 0);*/\
+    assert((stk)->stack_name);\
 }
 
-#if STACK_DEBUG > 0
-#define RET_ERR
-#define RETURN_ERROR(err_info, err) {\
-(err_info).file = __FILE__;\
-(err_info).func = __func__;\
-(err_info).line = __LINE__;\
-return (err_info).err_code = (err);\
-}
-#else
-#define RETURN_ERROR(err_info, err) {abort();}
-#endif
+struct Stack_t {
+    ON_DBG(
+    //Error_info err; не хранить ошибку в стике
+    Position_info cr_info;
+    const char* stack_name;
+    )
+    stack_elem_t* data;
+    // подумать над size что это
+    size_t size;
+    size_t capacity;
+};
 
 const int CAPACITY_UP_COEF = 2;
 const int CAPACITY_DOWN_COEF = 4;
+const int BASE_LENGTH = 5;
+
+#include "stack_func.h"
 
 #endif
